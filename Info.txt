@@ -1,0 +1,8 @@
+Use Eclipse IDE to Run and see code
+
+a standalone has been provided but to run it you need to use the command 
+java -jar 
+then file location 
+
+example:
+java -jar "C:\Users\joshu\Desktop\Early Entry\Java\Central Game engine with test Space.jar"

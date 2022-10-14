@@ -1,0 +1,169 @@
+package com.central.game;
+
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+
+import com.central.engine.AbstractGame;
+import com.central.engine.GameContainer;
+import com.central.engine.Renderer;
+import com.central.engine.audio.SoundClip;
+import com.central.engine.gfx.Image;
+import com.central.engine.gfx.ImageTile;
+import com.central.engine.gfx.Light;
+import com.central.game.objects.Enemie_WK;
+import com.central.game.objects.GameObject;
+import com.central.game.objects.Player;
+import com.central.game.objects.platform;
+
+public class GameManger extends AbstractGame
+{
+	public static final int TS = 16;
+	
+	private ArrayList<GameObject> objects = new ArrayList<GameObject>();
+	private Camera camera;
+	public SoundClip clip;
+	private boolean[] collision;
+	private int levelW, levelH;
+	
+	public GameManger()
+	{
+		objects.add(new Player(4,4));
+		
+		objects.add(new Enemie_WK(10,4));
+		clip = new SoundClip("/Sounds/Duel of the Fates.wav");
+		clip.setVolume(0.1f);
+		clip.loop();
+		clip.play();
+		
+		objects.add(new platform());
+		LoadLevel("/level.png");
+		camera = new Camera("player");
+	}
+	
+	@Override
+	public void init(GameContainer gc) 
+	{
+		gc.getRenderer().setAmbientColour(-1);
+	}
+	
+	@Override
+	public void update(GameContainer gc, float dt) 
+	{
+		for(int i = 0; i < objects.size(); i++)
+		{
+			objects.get(i).update(gc, this, dt);
+			if(objects.get(i).isDead())
+			{
+				objects.remove(i);
+				i--;
+			}
+		}
+		
+		Physics.update();
+		
+		camera.update(gc, this, dt);
+	}
+	
+
+	@Override
+	public void render(GameContainer gc, Renderer r)
+	{
+		camera.render(r);
+		
+		for(int y = 0; y < levelH; y++)
+		{
+			for(int x = 0; x < levelW; x++)
+			{
+				if(collision[x + y * levelW])
+				{
+					r.drawfillrect(x * TS, y * TS, TS, TS, 0xff0f0f0f);
+				}
+				else
+				{
+					r.drawfillrect(x * TS, y * TS, TS, TS, 0xfff9f9f9);
+				}
+			}
+		}
+		for(GameObject obj : objects)
+		{
+			obj.render(gc, r);
+		}
+	}
+	
+	public void LoadLevel(String path)
+	
+	{
+		Image levelImage = new Image(path);
+		
+		levelW = levelImage.getW();
+		levelH = levelImage.getH();
+		collision = new boolean[levelW * levelH];
+		
+		for(int y = 0; y < levelImage.getH(); y++)
+		{
+			for(int x = 0; x < levelImage.getW(); x++)
+			{
+				if(levelImage.getP()[x + y * levelImage.getW()] == 0xff000000)
+				{
+					collision[x + y * levelImage.getW()] = true;
+				}
+				else
+				{
+					collision[x + y * levelImage.getW()] = false;
+				}
+			}
+		}
+	}
+	
+	
+	public void addObject(GameObject object)
+	{
+		objects.add(object);
+	}
+	
+	public GameObject getObject(String tag)
+	{
+		for(int i = 0; i < objects.size(); i++)
+		{
+			if(objects.get(i).getTag().equals(tag))
+			{
+				return objects.get(i);
+			}
+		}
+		
+		return null;
+	}
+	
+	public boolean getCollision(int x, int y)
+	{
+		if(x < 0 || x >= levelW || y < 0 || y >= levelH)
+			return true;
+		return collision[x + y * levelW];
+	}
+	
+	public static void main(String args[])
+	{
+		GameContainer gc = new GameContainer(new GameManger());
+		gc.setWidth(320);
+		gc.setHeight(240);
+		gc.setScale(3f);
+		gc.start();
+	}
+
+	public int getLevelW() {
+		return levelW;
+	}
+
+	public void setLevelW(int levelW) {
+		this.levelW = levelW;
+	}
+
+	public int getLevelH() {
+		return levelH;
+	}
+
+	public void setLevelH(int levelH) {
+		this.levelH = levelH;
+	}
+	
+}
